@@ -1,0 +1,99 @@
+---
+title: "Publish Sketchbook Map to GitHub Pages automatically"
+description: "Push to main to trigger a GitHub Actions workflow that injects your Mapbox token secret into config.js and deploys the full site to GitHub Pages."
+---
+
+Sketchbook Map uses a fully automated deployment pipeline: every push to the `main` branch triggers a GitHub Actions workflow that injects your Mapbox token from a repository secret into a freshly generated `config.js`, then uploads the entire site to GitHub Pages. You never need to run a build command manually or commit any file containing your token.
+
+<Steps>
+  <Step title="Fork or push the repository to GitHub">
+    Make sure your Sketchbook Map code is in a GitHub repository. If you are starting from the upstream project, fork it to your own account. If you are working from a local clone, push it to a new GitHub repo.
+  </Step>
+
+  <Step title="Open the repository secrets settings">
+    In your GitHub repository, go to **Settings → Secrets and variables → Actions**.
+  </Step>
+
+  <Step title="Create the MAPBOX_TOKEN secret">
+    Click **New repository secret**. Set the name to `MAPBOX_TOKEN` and paste your Mapbox public access token as the value. Public tokens start with `pk.`.
+
+    <Note>
+      Your token must be a public access token (starts with `pk.`), not a secret token. Secret tokens (`sk.`) are for server-side use and should never be embedded in a static site.
+    </Note>
+  </Step>
+
+  <Step title="Enable GitHub Pages">
+    Go to **Settings → Pages**. Under **Source**, select **GitHub Actions**.
+  </Step>
+
+  <Step title="Push to the main branch">
+    Commit and push any change to `main`. The workflow starts automatically — you can watch its progress under the **Actions** tab of your repository.
+  </Step>
+
+  <Step title="Visit your live map">
+    Once the workflow completes, GitHub shows your Pages URL at the top of **Settings → Pages**. Open it to see the deployed map.
+  </Step>
+</Steps>
+
+## Workflow file
+
+The workflow at `.github/workflows/deploy.yml` handles the full pipeline:
+
+```yaml
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate config.js
+        run: |
+          printf 'const CONFIG = { MAPBOX_ACCESS_TOKEN: "%s" };\nif (typeof window !== "undefined") { window.CONFIG = CONFIG; }\n' "$MAPBOX_TOKEN" > config.js
+        env:
+          MAPBOX_TOKEN: ${{ secrets.MAPBOX_TOKEN }}
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
+```
+
+## How config.js is generated
+
+The **Generate config.js** step writes the file at runtime using a single `printf` command:
+
+```bash
+printf 'const CONFIG = { MAPBOX_ACCESS_TOKEN: "%s" };\nif (typeof window !== "undefined") { window.CONFIG = CONFIG; }\n' "$MAPBOX_TOKEN" > config.js
+```
+
+The `MAPBOX_TOKEN` environment variable is populated from `secrets.MAPBOX_TOKEN`, so the token value is never stored in the repository.
+
+<Warning>
+  `config.js` is listed in `.gitignore` and must never be committed. Committing it would expose your Mapbox token in your public repository history.
+</Warning>
+
+<Tip>
+  Restrict your Mapbox token to specific URLs in the [Mapbox dashboard](https://account.mapbox.com/access-tokens/) under **Access tokens → your token → Allowed URLs**. Add your GitHub Pages domain (e.g. `https://your-username.github.io`) so the token cannot be used from other origins even if someone discovers it.
+</Tip>

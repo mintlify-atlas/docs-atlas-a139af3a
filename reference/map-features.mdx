@@ -1,0 +1,74 @@
+---
+title: "Interactive map features: tour, clusters, and modal"
+description: "Reference for Sketchbook Map's interactive features: the collection toggle, city-based marker clustering, sketch modal, and guided tour through 8 cities."
+---
+
+The Sketchbook Map lets you explore two collections — hand-drawn sketchbook pages and type-specimen photographs — pinned to the locations where they were made. Markers cluster by city when you're zoomed out, expand when you zoom in, and open a full-size image modal when clicked. A guided tour steps through curated cities automatically. All interactions work with both mouse and keyboard.
+
+<Note>
+**Keyboard shortcuts:** When the sketch modal is open, use the **← left arrow** and **→ right arrow** keys to navigate between sketches. Press **Escape** to close the modal.
+</Note>
+
+## Collection toggle
+
+The **Sketchbooks / Type Specimens** toggle sits at the bottom center of the screen. It switches the map between two independent collections:
+
+- **Sketchbooks** — sketch drawings pinned to their drawing locations, loaded from `data.json`
+- **Type Specimens** — type-photo images pinned to GPS coordinates from `type-photos/locations.json`
+
+Switching modes immediately clears all existing markers and renders the other collection. Tour mode is only available in **Sketchbooks** mode; the **Take me on a tour** button is hidden when **Type Specimens** is active.
+
+## Marker clustering
+
+Sketches that fall within **20 km** of each other are grouped into a city cluster (`CITY_RADIUS_KM = 20`). This keeps the map readable when many sketches share the same city.
+
+**Zoomed out (below zoom level 11):** Clicking a cluster marker fits the map to show all sketches belonging to that city (`EXPAND_ZOOM = 11`). The map animates to the bounding box of the city's sketches.
+
+**Zoomed in (zoom level 11 and above):** Individual sketch markers are shown. Clicking any marker opens the sketch modal.
+
+**Overlapping markers:** When two or more sketches share nearly the same coordinates (within approximately 100 m, `PROXIMITY_THRESHOLD = 0.001` degrees), they are spread in a small circle around their shared point. The spread radius scales with zoom level so markers remain readable and clickable at any zoom.
+
+## Sketch modal
+
+Clicking an individual marker at zoom 11+ opens the sketch modal. The modal displays:
+
+- The full-size sketch or type-specimen image
+- The sketch's **title** (shown below the image in small text)
+- The **GPS coordinates**, formatted as decimal degrees with cardinal directions (e.g., `38.6560°N, 90.3122°W`)
+
+**Navigation within the modal:**
+
+- Use the **← left arrow** and **→ right arrow** keyboard keys to step through sketches in order
+- Press **Escape** or click outside the modal image to close it
+
+<Note>
+  Modal navigation is keyboard-driven. Use arrow keys to move between sketches and Escape to close. There are no visible Previous / Next buttons in the default UI.
+</Note>
+
+## Tour mode
+
+Tour mode is available in **Sketchbooks** mode only. The **Take me on a tour** button slides in from the top of the screen 10 seconds after the page loads. Clicking it starts a guided tour through eight curated cities.
+
+**Tour cities, in order:**
+
+1. Copenhagen
+2. Oslo
+3. Arles
+4. Florence
+5. London
+6. Guadalupe Mountains National Park
+7. San Francisco
+8. St. Louis
+
+For each city the map flies to a bounding box that fits all sketches within that city's radius. A tour bar appears at the top of the screen showing the current city name.
+
+**Tour navigation:**
+
+- Click **←** to go to the previous city
+- Click **→** to go to the next city
+- Click **×** in the tour bar to exit the tour and return to the full map view
+- Switching to **Type Specimens** mode also exits the tour
+
+<Tip>
+You can click any individual marker while the tour is active to open the sketch modal without interrupting the tour.
+</Tip>

@@ -1,0 +1,44 @@
+---
+title: "Upload sketch and type photo images in the browser"
+description: "The Upload Images tab lets you drag and drop sketch or type photo files directly from the browser, triggering server-side Python script processing."
+---
+
+The **Upload Images** tab is a browser-based alternative to running the Python processing scripts manually from the command line. Drop image files onto one of the two upload zones and the server saves the file, runs the appropriate script, and reports the result — all without leaving the browser.
+
+<Note>
+  This feature requires the local development server. Run `npm start` before using the upload panel. It is not available on the deployed GitHub Pages site.
+</Note>
+
+## Upload zones
+
+The panel contains two distinct drop zones, each wired to a different processing script:
+
+- **Sketchbooks** — accepts PNG and JPEG files. The server runs `scripts/process-sketches.py` after each upload. Once processing completes, switch to the **Place Sketches** tab to assign a location to the new sketch.
+- **Type Specimens** — accepts PNG and JPEG files. Files **must contain GPS EXIF data** — the server runs `scripts/process-type-photos.py`, which reads the coordinates directly from the image metadata and places the photo automatically on the map. Reload the public map page to see new type photos appear.
+
+<Warning>
+  Type specimen photos without GPS EXIF data will be skipped by the processing script. Enable location tagging on your camera or phone before shooting, or add GPS metadata to existing files before uploading.
+</Warning>
+
+## Upload workflow
+
+<Steps>
+  <Step title="Open the Upload Images tab">
+    Navigate to [http://localhost:3000/admin](http://localhost:3000/admin) and click **Upload Images** in the admin nav bar.
+  </Step>
+  <Step title="Add files to a zone">
+    Drag one or more image files onto the **Sketchbooks** or **Type Specimens** zone, or click the zone to open a file picker. Both zones accept multiple files at once.
+  </Step>
+  <Step title="Monitor the queue">
+    Added files appear immediately in the queue below the upload zones, each showing its filename, type label, and current status: **Queued**, **Uploading...**, **Processing...**, **Done**, or **Error**. Files are processed one at a time in the order they were added.
+  </Step>
+  <Step title="Act on the results">
+    When a sketch upload finishes successfully, the status reads **Ready to place — reload page**. Switch to the **Place Sketches** tab (after reloading) to assign it a location. For type specimen uploads, the status reads **Added to map — reload to see** — reload the public map at [http://localhost:3000](http://localhost:3000) to confirm the new pin.
+  </Step>
+</Steps>
+
+## Managing the queue
+
+Completed and errored items stay visible in the queue until you dismiss them. Click **Clear done** in the queue header to remove all items with a **Done** or **Error** status, leaving only in-progress or queued items.
+
+The upload endpoint is `POST /api/upload`. Each request sends the file as a base64-encoded JSON payload with the fields `type`, `filename`, and `data`.

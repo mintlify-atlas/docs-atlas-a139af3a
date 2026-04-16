@@ -1,0 +1,94 @@
+---
+title: "Add GPS-tagged typeface specimen photos to the map"
+description: "Drop GPS-tagged phone photos into upload-specs/, run process-type-photos.py to extract EXIF coordinates and generate WebP thumbnails, then reload the map."
+---
+
+Type specimen photos are placed on the map automatically using the GPS coordinates embedded in each photo's EXIF data. When you take a photo with your phone's location services enabled, the camera records latitude, longitude, and altitude alongside the image. The processing script reads those coordinates, converts the photo to WebP, generates a thumbnail, and writes an entry to `type-photos/locations.json` — no manual placement step required. Reload the site and the new markers appear exactly where the photos were taken.
+
+<Steps>
+  <Step title="Enable location on your phone before shooting">
+    Make sure your phone's location services are turned on for the camera app before you take the photo. The GPS fix is written into the image file at the moment of capture; you cannot add it after the fact.
+
+    <Tip>
+      Take photos outdoors or near a window for the best GPS accuracy. Indoor shots may produce a weak or missing GPS fix, which will cause the script to skip those photos entirely.
+    </Tip>
+  </Step>
+
+  <Step title="Drop photos into upload-specs/">
+    Copy your photos into the `upload-specs/` directory at the root of the project.
+
+    **Supported formats:** `.jpg`, `.JPG`, `.jpeg`, `.JPEG`, `.png`, `.PNG`
+
+    <Warning>
+      Photos with no GPS EXIF data are skipped and left in `upload-specs/` — they are not moved to `done/` and no entry is written to `locations.json`. Check the script output for any `⚠ no GPS data found` lines to identify skipped files.
+    </Warning>
+  </Step>
+
+  <Step title="Run the processing script">
+    From the project root, run:
+
+    ```bash
+    python3 scripts/process-type-photos.py
+    ```
+
+    For each photo that contains GPS data the script:
+
+    1. Extracts latitude, longitude, and altitude from the EXIF `GPSInfo` tag
+    2. Copies the original file to `type-photos/`
+    3. Converts the original to a full-size WebP at `type-photos/<name>.webp`
+    4. Creates a 200 px wide WebP thumbnail at `type-photos/thumbs/<name>.webp`
+    5. Adds an entry to `type-photos/locations.json`
+    6. Moves the source file to `upload-specs/done/`
+
+    Example output:
+
+    ```
+      processing: IMG_4821.jpg
+        ✓ 38.62901, -90.19872
+      processing: IMG_4822.jpg
+        ⚠ no GPS data found — skipping
+
+    Done — added 1, skipped 1
+    Reload the site to see the new markers.
+    ```
+
+    <Note>
+      The script requires the **Pillow** Python package for EXIF extraction. Install it with:
+
+      ```bash
+      pip install Pillow
+      ```
+
+      It also calls `cwebp` to produce WebP files. Install it with `brew install webp` (macOS) or `sudo apt install webp` (Debian/Ubuntu).
+    </Note>
+  </Step>
+
+  <Step title="Reload the site to see new markers">
+    Reload [`http://localhost:3000`](http://localhost:3000) in your browser. Each newly processed photo appears as a marker at its GPS coordinates. No admin step is needed — placement is fully automatic.
+  </Step>
+</Steps>
+
+## locations.json entry format
+
+Each processed photo adds one key to `type-photos/locations.json`, keyed by the original filename. The `altitude_m` and `date` fields are included only when the EXIF data contains them.
+
+```json
+{
+  "IMG_4821.jpg": {
+    "latitude": 38.62901,
+    "longitude": -90.19872,
+    "altitude_m": 142.35,
+    "date": "2026:03:06"
+  }
+}
+```
+
+The `date` value comes from the EXIF `DateTimeOriginal` tag and uses the `YYYY:MM:DD` format written by most phone cameras.
+
+## Script constants reference
+
+| Constant | Value | Effect |
+|---|---|---|
+| `WEBP_QUALITY` | `90` | WebP compression quality for full-size copies (0–100) |
+| `THUMB_QUALITY` | `85` | WebP compression quality for thumbnails (0–100) |
+| `THUMB_WIDTH` | `200` | Pixel width of generated thumbnails (height scales proportionally) |

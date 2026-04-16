@@ -1,0 +1,86 @@
+---
+title: "Configure your Mapbox access token for Sketchbook Map"
+description: "Sketchbook Map needs a Mapbox public token to render the map. Copy config.example.js to config.js for local dev, or set MAPBOX_TOKEN for GitHub Pages."
+---
+
+The only piece of configuration Sketchbook Map requires is a Mapbox public access token. The token is loaded at runtime from `config.js`, a file that is intentionally excluded from version control. How you create that file depends on whether you are running the project locally or deploying it to GitHub Pages.
+
+## config.js structure
+
+Your `config.js` must match the shape defined in `config.example.js`:
+
+```js
+const CONFIG = {
+    MAPBOX_ACCESS_TOKEN: ''
+};
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+}
+```
+
+Replace the empty string with your token before running or deploying the project.
+
+## Setup paths
+
+<Tabs>
+  <Tab title="Local development">
+    Copy `config.example.js` to `config.js` at the project root and fill in your token:
+
+    ```bash
+    cp config.example.js config.js
+    ```
+
+    Then open `config.js` and set your token:
+
+    ```js
+    const CONFIG = {
+        MAPBOX_ACCESS_TOKEN: 'pk.your_token_here'
+    };
+    if (typeof window !== 'undefined') {
+        window.CONFIG = CONFIG;
+    }
+    ```
+
+    Start the dev server with `npm start` — it serves the app at `http://localhost:3000`.
+
+    <Warning>
+      `config.js` is in `.gitignore` and must never be committed. Committing it would expose your Mapbox token in your repository history.
+    </Warning>
+  </Tab>
+
+  <Tab title="GitHub Pages">
+    For GitHub Pages deployments, you do not create `config.js` manually. Instead, store your token as a repository secret named `MAPBOX_TOKEN`. The GitHub Actions workflow generates `config.js` from that secret at deploy time.
+
+    See the [Deploy to GitHub Pages](/deployment/github-pages) guide for step-by-step instructions.
+  </Tab>
+</Tabs>
+
+## Getting a Mapbox token
+
+<Steps>
+  <Step title="Create a Mapbox account">
+    Sign up at [mapbox.com](https://www.mapbox.com). A free account includes enough map loads for personal and small projects.
+  </Step>
+
+  <Step title="Go to Access tokens">
+    After logging in, open your account dashboard and navigate to **Access tokens**.
+  </Step>
+
+  <Step title="Copy your default public token">
+    Mapbox creates a default public token for every account. Copy it — it starts with `pk.`. You can also create a new scoped token if you prefer to keep things separate.
+  </Step>
+</Steps>
+
+<Note>
+  Sketchbook Map uses the `mapbox://styles/mapbox/dark-v11` map style. This is a Mapbox-hosted style and is included with any valid public token — no additional configuration is needed.
+</Note>
+
+## CI environments
+
+If you are deploying to a CI environment other than GitHub Pages (for example, Netlify), use the `npm run build` script instead of writing `config.js` by hand. The script at `scripts/build-config.js` reads the `MAPBOX_ACCESS_TOKEN` environment variable and writes a correctly formatted `config.js` to the project root:
+
+```bash
+MAPBOX_ACCESS_TOKEN=pk.your_token_here npm run build
+```
+
+The script exits with an error if the variable is missing or still set to the placeholder value `YOUR_MAPBOX_PUBLIC_TOKEN`.

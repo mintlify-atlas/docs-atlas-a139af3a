@@ -1,0 +1,102 @@
+---
+title: "data.json and locations.json data format reference"
+description: "Field-by-field reference for the two data files that power Sketchbook Map: data.json sketch coordinate records and type-photos/locations.json GPS entries."
+---
+
+The Sketchbook Map reads from two JSON data files at runtime. `data.json` holds every sketch's coordinates and metadata and is written by the admin panel. `type-photos/locations.json` holds GPS coordinates extracted from EXIF data for type-specimen photos and is written by the `process-type-photos.py` script. You never need to edit either file by hand — the admin panel and processing scripts manage them for you.
+
+## data.json — sketch location database
+
+`data.json` lives at the repo root and is the primary database for the map. It contains a single top-level `sketches` array. Each element in the array represents one sketch pinned to the map.
+
+```json
+{
+  "sketches": [
+    {
+      "id": "sketch-1775486624060",
+      "filename": "2E.png",
+      "coordinates": [-90.31220543294245, 38.65603922845085],
+      "title": "2E",
+      "date": ""
+    }
+  ]
+}
+```
+
+<Note>
+Coordinates follow the GeoJSON convention: `[longitude, latitude]`, **not** `[lat, lng]`. Longitude comes first.
+</Note>
+
+The admin panel writes this file via `POST /api/save-data` whenever you confirm a sketch location.
+
+### Fields
+
+<ResponseField name="id" type="string" required>
+  Unique identifier for the sketch. Generated automatically by the admin panel using the format `sketch-{timestamp}`, where `{timestamp}` is a Unix millisecond timestamp (e.g., `"sketch-1775486624060"`).
+</ResponseField>
+
+<ResponseField name="filename" type="string" required>
+  The image filename as stored in `sketchbook-bank/` (e.g., `"Alice.png"`). This value is used to construct both the full-size image path and the WebP thumbnail path.
+</ResponseField>
+
+<ResponseField name="coordinates" type="number[]" required>
+  Geographic position as `[longitude, latitude]` in WGS84 decimal degrees. Longitude is the first element, latitude is the second — this is the GeoJSON convention used by Mapbox GL JS.
+</ResponseField>
+
+<ResponseField name="title" type="string" required>
+  Display name shown in the sketch modal when you open a marker. Typically the sketch's short name without file extension (e.g., `"Alice"`).
+</ResponseField>
+
+<ResponseField name="date" type="string">
+  Optional date string associated with the sketch. Can be any human-readable format or an empty string `""`. Displayed in the modal below the title.
+</ResponseField>
+
+---
+
+## type-photos/locations.json — type photo GPS database
+
+`type-photos/locations.json` is a flat object keyed by the original image filename. Each value contains the GPS data extracted from that image's EXIF metadata. The `process-type-photos.py` script populates this file automatically when you process new uploads.
+
+```json
+{
+  "photo.jpg": {
+    "latitude": 48.8584,
+    "longitude": 2.2945,
+    "altitude_m": 330.0,
+    "date": "2026:03:06"
+  }
+}
+```
+
+### Fields
+
+<ResponseField name="latitude" type="number" required>
+  Latitude in decimal degrees. Positive values are North, negative values are South. Converted from the DMS (degrees, minutes, seconds) format stored in EXIF.
+</ResponseField>
+
+<ResponseField name="longitude" type="number" required>
+  Longitude in decimal degrees. Positive values are East, negative values are West. Converted from the DMS format stored in EXIF.
+</ResponseField>
+
+<ResponseField name="altitude_m" type="number">
+  Altitude in meters above sea level, extracted from the EXIF `GPSAltitude` tag. Present only when the source image contains altitude data. Negative if below sea level.
+</ResponseField>
+
+<ResponseField name="date" type="string">
+  Date string taken from the EXIF `DateTimeOriginal` tag, formatted as `YYYY:MM:DD` (e.g., `"2026:03:06"`). Present only when the source image contains date metadata.
+</ResponseField>
+
+---
+
+## File paths — image directory layout
+
+The map and scripts expect images to follow this directory structure relative to the repo root:
+
+| Path | Description |
+|---|---|
+| `sketchbook-bank/<filename>` | Full-size sketch images (original format, e.g. `.png`) |
+| `sketchbook-bank/thumbs/<name>.webp` | 200 px wide WebP thumbnails used for map markers |
+| `type-photos/<name>.webp` | Full-size WebP conversions of type-specimen photos |
+| `type-photos/thumbs/<name>.webp` | 200 px wide WebP thumbnails used for map markers |
+
+Both `process-sketches.py` and `process-type-photos.py` create these directories automatically if they don't exist. You do not need to create them manually.

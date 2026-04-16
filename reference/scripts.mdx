@@ -1,0 +1,171 @@
+---
+title: "Image processing and configuration scripts reference"
+description: "Reference for process-sketches.py, process-type-photos.py, and build-config.js — what each script reads, writes, requires, and when you should run it."
+---
+
+The three scripts in the `scripts/` directory handle image processing and configuration generation so you never have to manually edit `data.json`, `locations.json`, or `config.js`. Drop images into the appropriate upload folder, run the relevant script, and the output files are created and registered for you. `build-config.js` is primarily run by CI but is documented here for completeness.
+
+<AccordionGroup>
+
+<Accordion title="process-sketches.py" icon="image">
+
+Processes raw sketch images from `upload-sketches/`, generates thumbnails, and registers the new filenames in the admin panel's image list so you can place them on the map.
+
+**Usage**
+
+```bash
+python3 scripts/process-sketches.py
+```
+
+**Input**
+
+Place image files in the `upload-sketches/` directory before running. Accepted extensions: `.png`, `.PNG`, `.jpg`, `.JPG`, `.jpeg`, `.JPEG`.
+
+**What the script does**
+
+<Steps>
+  <Step title="Copies the original image">
+    Copies each image from `upload-sketches/` to `sketchbook-bank/`, preserving the original filename and format.
+  </Step>
+  <Step title="Creates a WebP thumbnail">
+    Calls `cwebp` to produce a 200 px wide WebP thumbnail at `sketchbook-bank/thumbs/<name>.webp`. Quality is set to 85 (`THUMB_QUALITY = 85`).
+  </Step>
+  <Step title="Updates the admin image list">
+    Parses `admin/admin.js` and adds the new filename to the `allImages` array, keeping the list sorted alphabetically.
+  </Step>
+  <Step title="Moves the source file to done/">
+    Moves the processed original to `upload-sketches/done/` so subsequent runs don't re-process it.
+  </Step>
+</Steps>
+
+**Constants**
+
+| Name | Value | Description |
+|---|---|---|
+| `THUMB_WIDTH` | `200` | Thumbnail width in pixels |
+| `THUMB_QUALITY` | `85` | WebP quality (0–100) |
+
+**Requirements**
+
+- `cwebp` command-line tool must be installed and on your `PATH`. Install via [Google's WebP distribution](https://developers.google.com/speed/webp/download) or your system package manager (e.g., `brew install webp` on macOS).
+
+**Skip behavior**
+
+The script reads the existing `allImages` list from `admin/admin.js` before processing. Any image whose filename already appears in that list is skipped with a message. This makes the script safe to run multiple times.
+
+<Warning>
+After running, open `/admin` in the browser to drag each new sketch to its location on the map. The script registers the image but does not assign coordinates.
+</Warning>
+
+</Accordion>
+
+<Accordion title="process-type-photos.py" icon="camera">
+
+Processes type-specimen photos from `upload-specs/`, extracts GPS coordinates from EXIF metadata, converts images to WebP, and updates `type-photos/locations.json`.
+
+**Usage**
+
+```bash
+python3 scripts/process-type-photos.py
+```
+
+**Input**
+
+Place image files in the `upload-specs/` directory before running. Accepted extensions: `.jpg`, `.JPG`, `.jpeg`, `.JPEG`, `.png`, `.PNG`. Images **must contain GPS EXIF data** — photos without GPS are skipped.
+
+**What the script does**
+
+<Steps>
+  <Step title="Reads GPS and date from EXIF">
+    Opens each image with Pillow and extracts latitude, longitude, altitude, and `DateTimeOriginal` from the EXIF tags. If no GPS data is found, the image is skipped.
+  </Step>
+  <Step title="Copies the original image">
+    Copies the source file to `type-photos/` preserving the original filename.
+  </Step>
+  <Step title="Creates a full-size WebP">
+    Converts the original to `type-photos/<name>.webp` at quality 90 (`WEBP_QUALITY = 90`).
+  </Step>
+  <Step title="Creates a WebP thumbnail">
+    Converts the original to `type-photos/thumbs/<name>.webp` at 200 px wide, quality 85 (`THUMB_QUALITY = 85`).
+  </Step>
+  <Step title="Updates locations.json">
+    Adds or updates the entry in `type-photos/locations.json` with the extracted latitude, longitude, and optionally altitude and date.
+  </Step>
+  <Step title="Moves the source file to done/">
+    Moves the processed original to `upload-specs/done/` so subsequent runs don't re-process it.
+  </Step>
+</Steps>
+
+**Constants**
+
+| Name | Value | Description |
+|---|---|---|
+| `WEBP_QUALITY` | `90` | Full-size WebP quality (0–100) |
+| `THUMB_QUALITY` | `85` | Thumbnail WebP quality (0–100) |
+| `THUMB_WIDTH` | `200` | Thumbnail width in pixels |
+
+**Requirements**
+
+- `cwebp` command-line tool must be installed and on your `PATH`.
+- Python `Pillow` package: `pip install Pillow`
+
+**Skip behavior**
+
+Images are skipped (and not moved to `done/`) in two cases:
+
+1. The image has no GPS EXIF data.
+2. The filename is already registered in `type-photos/locations.json`.
+
+<Note>
+After running, reload the map in your browser to see the new type-photo markers appear.
+</Note>
+
+</Accordion>
+
+<Accordion title="build-config.js" icon="gear">
+
+Writes `config.js` at the repo root from the `MAPBOX_ACCESS_TOKEN` environment variable. This script is used by CI (GitHub Actions / Netlify) to inject the token at build time.
+
+**Usage**
+
+```bash
+node scripts/build-config.js
+```
+
+Or via the npm script defined in `package.json`:
+
+```bash
+npm run build
+```
+
+**Input**
+
+The `MAPBOX_ACCESS_TOKEN` environment variable must be set to your Mapbox public token before running.
+
+**Output**
+
+Writes `config.js` in the repo root with the following content:
+
+```js
+const CONFIG = {
+    MAPBOX_ACCESS_TOKEN: "pk.eyJ1Ijoi..."
+};
+if (typeof window !== 'undefined') {
+    window.CONFIG = CONFIG;
+}
+```
+
+**Error conditions**
+
+The script exits with code `1` and prints an error message if:
+
+- `MAPBOX_ACCESS_TOKEN` is not set, or
+- `MAPBOX_ACCESS_TOKEN` equals the placeholder string `'YOUR_MAPBOX_PUBLIC_TOKEN'`
+
+<Tip>
+For local development you don't need to run this script. Keep a `config.js` in the repo root with your token directly — it is gitignored and won't be committed.
+</Tip>
+
+</Accordion>
+
+</AccordionGroup>

@@ -1,0 +1,87 @@
+---
+title: "Add new hand-drawn sketch images to Sketchbook Map"
+description: "Drop PNG or JPEG files into upload-sketches/, run process-sketches.py to generate WebP thumbnails, then use the admin panel to set each sketch's location."
+---
+
+The sketch workflow has two stages: the processing script handles the mechanical work — copying images, generating thumbnails, and registering filenames — while the admin panel gives you a visual interface to click a location on the map for each new sketch. Drop your images into `upload-sketches/`, run the script once, then open `/admin` in the browser to finish placement. You only need to run the script when you have new images to add.
+
+<Steps>
+  <Step title="Drop images into upload-sketches/">
+    Copy your sketch images into the `upload-sketches/` directory at the root of the project. The script processes all files in that folder when it runs.
+
+    **Supported formats:** `.png`, `.PNG`, `.jpg`, `.JPG`, `.jpeg`, `.JPEG`
+
+    <Warning>
+      Images whose filenames are already registered in `admin/admin.js` are silently skipped — they will not be re-processed or moved to `done/`. If you need to re-process a file, remove it from the `allImages` array in `admin/admin.js` first.
+    </Warning>
+  </Step>
+
+  <Step title="Run the processing script">
+    From the project root, run:
+
+    ```bash
+    python3 scripts/process-sketches.py
+    ```
+
+    For each image the script:
+
+    1. Copies the original file to `sketchbook-bank/`
+    2. Creates a 200 px wide WebP thumbnail at `sketchbook-bank/thumbs/<name>.webp`
+    3. Registers the filename in the `allImages` array inside `admin/admin.js`
+    4. Moves the source file to `upload-sketches/done/`
+
+    Example output for two new images:
+
+    ```
+      processing: Guadalupe.png
+        ✓ added to sketchbook-bank/ and admin list
+      processing: Maplewood.png
+        ✓ added to sketchbook-bank/ and admin list
+
+    Done — added 2, skipped 0
+    Open /admin in the browser to place the new sketches on the map.
+    ```
+
+    The relevant constants that control thumbnail generation:
+
+    ```python
+    THUMB_WIDTH = 200
+    THUMB_QUALITY = 85
+    ```
+
+    <Note>
+      The script calls `cwebp` to produce WebP thumbnails. Install it before running:
+
+      ```bash
+      # macOS
+      brew install webp
+
+      # Debian / Ubuntu
+      sudo apt install webp
+      ```
+    </Note>
+  </Step>
+
+  <Step title="Place the new sketches on the map">
+    Start the dev server if it isn't already running:
+
+    ```bash
+    npm start
+    ```
+
+    Then open [`http://localhost:3000/admin`](http://localhost:3000/admin) in your browser. Newly registered sketches that haven't been placed yet appear one at a time. Click the map to set the location for each sketch, then click **Confirm Location** to save it to `data.json`.
+
+    Repeat for every sketch that was added in the previous step.
+  </Step>
+</Steps>
+
+## What happens if you skip placement
+
+Any sketch that has been registered in `admin/admin.js` but not yet placed in `data.json` will reappear in the admin panel the next time you open it. Unplaced sketches are never shown on the public map, so it is safe to run the script and defer placement until later.
+
+## Script constants reference
+
+| Constant | Value | Effect |
+|---|---|---|
+| `THUMB_WIDTH` | `200` | Pixel width of generated WebP thumbnails (height scales proportionally) |
+| `THUMB_QUALITY` | `85` | WebP compression quality for thumbnails (0–100) |

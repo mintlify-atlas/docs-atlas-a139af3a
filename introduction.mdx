@@ -1,0 +1,63 @@
+---
+title: "Sketchbook Map: an interactive map of your drawings"
+description: "Sketchbook Map plots hand-drawn sketchbook pages and typeface specimen photos on an interactive Mapbox map, pinned to the exact spots where you made them."
+---
+
+Sketchbook Map turns your sketchbooks into a living geographic record. Every drawing you've made gets pinned to the exact spot where you made it — cities you've visited, parks you've sketched in, streets where you photographed hand-lettered signs. Open the map and see where you've drawn.
+
+<CardGroup cols={2}>
+  <Card title="Quick start" icon="rocket" href="/quickstart">
+    Run the map locally in under five minutes
+  </Card>
+  <Card title="Add sketches" icon="pencil" href="/adding-content/sketches">
+    Process new sketch images and place them on the map
+  </Card>
+  <Card title="Add type photos" icon="camera" href="/adding-content/type-photos">
+    Import GPS-tagged typeface specimen photos automatically
+  </Card>
+  <Card title="Deploy to GitHub Pages" icon="cloud" href="/deployment/github-pages">
+    Publish your map publicly with one push to main
+  </Card>
+</CardGroup>
+
+## What's on the map
+
+The map has two collections you can toggle between at any time:
+
+**Sketchbooks** — hand-drawn pages from your sketchbooks. Each page appears as a circular thumbnail marker on the map. Click a marker to view the full drawing. When multiple sketches are close together, clicking the cluster zooms in to reveal them individually.
+
+**Type specimens** — photos of real-world typography: signs, storefronts, painted lettering. Photos are placed automatically using GPS coordinates embedded in the image EXIF data by your phone.
+
+## How it works
+
+<Steps>
+  <Step title="Run the local server">
+    Start the Node.js server with `npm start`. This serves both the public map and the admin panel at `http://localhost:3000`.
+  </Step>
+  <Step title="Process your images">
+    Drop sketch images into `upload-sketches/` and run `scripts/process-sketches.py`, or drop type photos into `upload-specs/` and run `scripts/process-type-photos.py`. The scripts generate thumbnails and register the images.
+  </Step>
+  <Step title="Place sketches on the map">
+    Open the admin panel at `/admin`. New, unplaced sketches appear one at a time. Click the map to set a location, then confirm.
+  </Step>
+  <Step title="Push to publish">
+    Push to the `main` branch. GitHub Actions builds the config and deploys the updated map to GitHub Pages automatically.
+  </Step>
+</Steps>
+
+## Key features
+
+<CardGroup cols={2}>
+  <Card title="City clustering" icon="layer-group">
+    Sketches within 20 km are grouped into a city cluster. Click to zoom in and reveal each marker individually.
+  </Card>
+  <Card title="Guided tour" icon="route">
+    A "Take me on a tour" button flies through a curated set of cities, fitting the map bounds to sketches in each location.
+  </Card>
+  <Card title="Drag-and-drop admin" icon="map-pin">
+    The `/admin` panel lets you place unlocated sketches on the map with a click, with a location search to jump anywhere in the world.
+  </Card>
+  <Card title="Automated processing" icon="gear">
+    Python scripts handle thumbnail generation (via `cwebp`), EXIF extraction, and data registration — no manual JSON editing needed.
+  </Card>
+</CardGroup>

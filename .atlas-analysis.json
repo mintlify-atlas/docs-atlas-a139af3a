@@ -1,0 +1,76 @@
+{
+  "projectType": "saas",
+  "projectName": "Sketchbook Map",
+  "projectDescription": "An interactive Mapbox-powered map that plots hand-drawn sketchbook pages and real-world type specimen photos at their geographic locations, with a drag-and-drop admin panel and automated image processing pipeline.",
+  "theme": "almond",
+  "primaryColor": "#1a1a1a",
+  "lightColor": "#f5f0eb",
+  "darkColor": "#0d0d0d",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Get Started",
+            "pages": [
+              "introduction",
+              "quickstart"
+            ]
+          },
+          {
+            "group": "Adding Content",
+            "pages": [
+              "adding-content/sketches",
+              "adding-content/type-photos"
+            ]
+          },
+          {
+            "group": "Admin Panel",
+            "pages": [
+              "admin/overview",
+              "admin/placing-sketches",
+              "admin/uploading-images"
+            ]
+          },
+          {
+            "group": "Deployment",
+            "pages": [
+              "deployment/github-pages",
+              "deployment/configuration"
+            ]
+          },
+          {
+            "group": "Reference",
+            "pages": [
+              "reference/data-format",
+              "reference/scripts",
+              "reference/map-features"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Interactive Mapbox GL JS dark map with sketch thumbnail markers",
+    "Toggle between Sketchbooks and Type Specimens collections",
+    "Guided tour mode cycling through cities with sketches",
+    "Drag-and-drop admin panel for placing sketches on the map",
+    "Automated image processing pipeline (thumbnail generation via cwebp)",
+    "GPS EXIF extraction for automatic type photo geolocation",
+    "City-based marker clustering with zoom-to-expand behavior",
+    "GitHub Pages deployment via GitHub Actions with secret injection"
+  ],
+  "publicApiSurface": [
+    "GET / — Public interactive map",
+    "GET /admin — Admin panel for placing and uploading content",
+    "POST /api/save-data — Save sketch location data to data.json",
+    "POST /api/upload — Upload and process a sketch or type photo image",
+    "data.json — Sketch location database (id, filename, coordinates, title, date)",
+    "type-photos/locations.json — Type photo GPS database (latitude, longitude, altitude_m, date)",
+    "scripts/process-sketches.py — Process and register new sketch images",
+    "scripts/process-type-photos.py — Extract GPS EXIF and register type photos",
+    "scripts/build-config.js — Generate config.js from MAPBOX_ACCESS_TOKEN env var"
+  ]
+}

@@ -1,0 +1,28 @@
+---
+title: "Sketchbook Map admin panel: place sketches and upload"
+description: "The admin panel at /admin gives you two local-only tools: a map interface for placing unlocated sketches and a drag-and-drop image uploader for new content."
+---
+
+The admin panel is a local-only tool that runs while the development server is active. It is not deployed to GitHub Pages and is not accessible to the public — it exists solely to help you manage sketch data from your own machine. Open it by navigating to [http://localhost:3000/admin](http://localhost:3000/admin) while `npm start` is running.
+
+<Note>
+  The admin panel has no password protection. It is intended for local use only and is never exposed in the deployed site.
+</Note>
+
+## Two tabs, two tools
+
+The panel is divided into two tabs accessible from the navigation bar at the top:
+
+- **Place Sketches** — displays each unlocated sketch image one at a time alongside an interactive Mapbox map. Click the map to pin a sketch to its real-world location, then confirm or skip before moving on.
+- **Upload Images** — provides drag-and-drop zones for adding new sketch or type specimen images directly from the browser. The server processes each file using the appropriate Python script.
+
+## Where to go next
+
+<CardGroup cols={2}>
+  <Card title="Placing sketches" icon="map-pin" href="/admin/placing-sketches">
+    Pin unlocated sketches to the map one by one.
+  </Card>
+  <Card title="Uploading images" icon="upload" href="/admin/uploading-images">
+    Add new sketch or type specimen images via the browser.
+  </Card>
+</CardGroup>

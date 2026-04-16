@@ -1,0 +1,40 @@
+---
+title: "Pin each unplaced sketch to its real-world location"
+description: "Use the Place Sketches tab to click a map location for each unplaced sketch. Each confirmation auto-saves coordinates to data.json on the local server."
+---
+
+The **Place Sketches** tab walks you through every sketch that hasn't been assigned a location yet. Each session picks up where you left off — sketches you skip reappear the next time you open the admin panel. Each time you confirm a location, the change is auto-saved to `data.json` on the server immediately.
+
+<Tip>
+  Use the search box in the top-right corner of the map to jump directly to a city or address. This is faster than scrolling when you know where a sketch was drawn.
+</Tip>
+
+## Place a sketch
+
+<Steps>
+  <Step title="Open the admin panel">
+    Navigate to [http://localhost:3000/admin](http://localhost:3000/admin) while `npm start` is running. The **Place Sketches** tab is active by default.
+  </Step>
+  <Step title="Review the current sketch">
+    The top bar shows the current unplaced sketch image along with its filename and a progress indicator reading **X of Y remaining**. This tells you how many sketches still need a location.
+  </Step>
+  <Step title="Find the location on the map">
+    Use the search box in the top-right to jump to a city or address, or pan and zoom the map manually to find where the sketch was drawn.
+  </Step>
+  <Step title="Click to drop a pin">
+    Click anywhere on the map to place a temporary marker at that position. You can click again to move the marker before confirming.
+  </Step>
+  <Step title="Confirm the location">
+    Click **Confirm Location** to save the coordinates for the current sketch. The marker becomes permanent on the map and `data.json` is updated automatically on the server.
+  </Step>
+  <Step title="Navigate between sketches">
+    Click **← Back** to undo the previous placement and re-place that sketch, or click **Skip →** to defer the current sketch and move on. Skipped sketches reappear the next time you open the admin panel.
+  </Step>
+  <Step title="Finish the session">
+    Continue placing or skipping sketches. When every unplaced sketch has been handled, the admin panel shows a completion message and reveals a **Save All** button as a final confirmation. Click it to flush the complete dataset to `data.json`.
+  </Step>
+</Steps>
+
+<Note>
+  Every **Confirm Location** click auto-saves to `data.json` immediately via `POST /api/save-data`. The **Save All** button only appears once all unplaced images have been processed, as a final checkpoint.
+</Note>
